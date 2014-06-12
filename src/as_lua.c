@@ -18,6 +18,9 @@
 #include <aerospike/as_iterator.h>
 #include <aerospike/as_status.h>
 
+static aerospike asPersistent;
+static bool isPConnected = false;
+
 static as_record add_bins_to_rec(lua_State *L, int index, int numBins)
 {
        as_record rec;
@@ -121,6 +124,31 @@ static int connect(lua_State *L){
     lua_pushnumber(L, err.code);
     lua_pushstring(L, err.message);
     lua_pushlightuserdata(L, &as);
+    return 3;
+}
+
+static int pconnect(lua_State *L) {
+    as_error err;
+    if (!isPConnected) {
+        const char *hostName = luaL_checkstring(L, 1);
+        int port = lua_tointeger(L, 2);
+
+        as_config config;
+        as_config_init(&config);
+
+        config.hosts[0].addr = hostName;
+        config.hosts[0].port = port;
+
+        aerospike_init(&asPersistent, &config);
+
+        aerospike_connect(&asPersistent, &err);
+
+        isPConnected = true;
+    }
+
+    lua_pushnumber(L, err.code);
+    lua_pushstring(L, err.message);
+    lua_pushlightuserdata(L, &asPersistent);
     return 3;
 }
 
@@ -246,6 +274,7 @@ static int increment(lua_State *L){
 
 static const struct luaL_Reg as_client [] = {
         {"connect", connect},
+        {"pconnect", pconnect},
         {"disconnect", disconnect},
         {"get", get},
         {"put", put},
