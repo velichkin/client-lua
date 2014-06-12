@@ -40,12 +40,12 @@ static as_record add_bins_to_rec(lua_State *L, int index, int numBins)
 
         // add to record
         if (lua_isnumber(L, -2)){
-        	int intValue = lua_tointeger(L, -2);
-        	as_record_set_int64(&rec, key, intValue);
+            int intValue = lua_tointeger(L, -2);
+            as_record_set_int64(&rec, key, intValue);
 
         } else if (lua_isstring(L, -2)){
-        	const char *value = lua_tostring(L, -2);
-        	as_record_set_str(&rec, key, value);
+            const char *value = lua_tostring(L, -2);
+            as_record_set_str(&rec, key, value);
         }
         // pop value + copy of key, leaving original key
         lua_pop(L, 2);
@@ -62,8 +62,8 @@ static as_record add_bins_to_rec(lua_State *L, int index, int numBins)
 
 static as_operations add_bins_to_increment(lua_State *L, int index, int numBins)
 {
-	as_operations ops;
-	as_operations_init(&ops, numBins);
+    as_operations ops;
+    as_operations_init(&ops, numBins);
 
     // Push another reference to the table on top of the stack (so we know
     // where it is, and this function can work for negative, positive and
@@ -81,8 +81,8 @@ static as_operations add_bins_to_increment(lua_State *L, int index, int numBins)
         const char *binName = lua_tostring(L, -1);
         int intValue = lua_tointeger(L, -2);
         printf("Bin:%s, value:%d\n", binName, intValue);
-    	//add an operation for each bin
-    	as_operations_add_incr(&ops, binName, intValue);
+        //add an operation for each bin
+        as_operations_add_incr(&ops, binName, intValue);
         // pop value + copy of key, leaving original key
         lua_pop(L, 2);
         // stack now contains: -1 => key; -2 => table
@@ -98,163 +98,163 @@ static as_operations add_bins_to_increment(lua_State *L, int index, int numBins)
 
 
 static int connect(lua_State *L){
-	const char *hostName = luaL_checkstring(L, 1);
-	int port = lua_tointeger(L, 2);
-	as_error err;
+    const char *hostName = luaL_checkstring(L, 1);
+    int port = lua_tointeger(L, 2);
+    as_error err;
 
-	// Configuration for the client.
-	as_config config;
-	as_config_init(&config);
+    // Configuration for the client.
+    as_config config;
+    as_config_init(&config);
 
-	// Add a seed host for cluster discovery.
-	config.hosts[0].addr = hostName;
-	config.hosts[0].port = port;
+    // Add a seed host for cluster discovery.
+    config.hosts[0].addr = hostName;
+    config.hosts[0].port = port;
 
-	// The Aerospike client instance, initialized with the configuration.
-	aerospike as;
-	aerospike_init(&as, &config);
+    // The Aerospike client instance, initialized with the configuration.
+    aerospike as;
+    aerospike_init(&as, &config);
 
-	// Connect to the cluster.
-	aerospike_connect(&as, &err);
+    // Connect to the cluster.
+    aerospike_connect(&as, &err);
 
-	/* Push the return */
-	lua_pushnumber(L, err.code);
-	lua_pushstring(L, err.message);
-	lua_pushlightuserdata(L, &as);
-	return 3;
+    /* Push the return */
+    lua_pushnumber(L, err.code);
+    lua_pushstring(L, err.message);
+    lua_pushlightuserdata(L, &as);
+    return 3;
 }
 
 static int disconnect(lua_State *L){
-	aerospike* as = lua_touserdata(L, 1);
-	as_error err;
-	aerospike_close(as, &err);
-	lua_pushnumber(L, err.code);
-	lua_pushstring(L, err.message);
-	return 2;
+    aerospike* as = lua_touserdata(L, 1);
+    as_error err;
+    aerospike_close(as, &err);
+    lua_pushnumber(L, err.code);
+    lua_pushstring(L, err.message);
+    return 2;
 }
 static int get(lua_State *L){
-	aerospike* as = lua_touserdata(L, 1);
-	const char* nameSpace = luaL_checkstring(L, 2);
-	const char* set = luaL_checkstring(L, 3);
-	const char* keyString = luaL_checkstring(L, 4);
+    aerospike* as = lua_touserdata(L, 1);
+    const char* nameSpace = luaL_checkstring(L, 2);
+    const char* set = luaL_checkstring(L, 3);
+    const char* keyString = luaL_checkstring(L, 4);
 
-	as_record* rec = NULL;
-	as_key key;
-	as_error err;
-	as_key_init(&key, nameSpace, set, keyString);
+    as_record* rec = NULL;
+    as_key key;
+    as_error err;
+    as_key_init(&key, nameSpace, set, keyString);
 
-	// Read the test record from the database.
-	aerospike_key_get(as, &err, NULL, &key, &rec);
+    // Read the test record from the database.
+    aerospike_key_get(as, &err, NULL, &key, &rec);
 
-	// Push the error code
-	lua_pushnumber(L, err.code);
+    // Push the error code
+    lua_pushnumber(L, err.code);
 
-	// Push the error message
-	lua_pushstring(L, err.message);
+    // Push the error message
+    lua_pushstring(L, err.message);
 
-	// Create an new table and push it
-	lua_newtable(L);
-	if ( err.code == AEROSPIKE_OK){
-		/*
-		 * iterate through bin and add the bin name
-		 * and value to the table
-		 */
-		as_record_iterator it;
-		as_record_iterator_init(&it, rec);
+    // Create an new table and push it
+    lua_newtable(L);
+    if ( err.code == AEROSPIKE_OK){
+        /*
+         * iterate through bin and add the bin name
+         * and value to the table
+         */
+        as_record_iterator it;
+        as_record_iterator_init(&it, rec);
 
-		while (as_record_iterator_has_next(&it)) {
-		    as_bin *bin        = as_record_iterator_next(&it);
-		    as_val *value      = (as_val*)as_bin_get_value(bin);
-		    as_integer *ivalue = as_integer_fromval(value);
+        while (as_record_iterator_has_next(&it)) {
+            as_bin *bin        = as_record_iterator_next(&it);
+            as_val *value      = (as_val*)as_bin_get_value(bin);
+            as_integer *ivalue = as_integer_fromval(value);
 
-		    lua_pushstring(L, as_bin_get_name(bin)); //Bin name
+            lua_pushstring(L, as_bin_get_name(bin)); //Bin name
 
-		    if (ivalue) {
-		        lua_pushnumber(L, as_integer_get(ivalue));
-		    } else {
-		       lua_pushstring(L, as_val_tostring(value));
-		    }
-		    lua_settable(L, -3);
-		}
-	}
-	as_record_destroy(rec);
-	as_key_destroy(&key);
-	return 3;
+            if (ivalue) {
+                lua_pushnumber(L, as_integer_get(ivalue));
+            } else {
+               lua_pushstring(L, as_val_tostring(value));
+            }
+            lua_settable(L, -3);
+        }
+    }
+    as_record_destroy(rec);
+    as_key_destroy(&key);
+    return 3;
 }
 
 
 
 static int put(lua_State *L){
 
-	//Cluster
-	aerospike* as = lua_touserdata(L, 1);
+    //Cluster
+    aerospike* as = lua_touserdata(L, 1);
 
-	//Namespace
-	const char* nameSpace = luaL_checkstring(L, 2);
+    //Namespace
+    const char* nameSpace = luaL_checkstring(L, 2);
 
-	//Set
-	const char* set = luaL_checkstring(L, 3);
+    //Set
+    const char* set = luaL_checkstring(L, 3);
 
-	//Key as string
-	const char* keyString = luaL_checkstring(L, 4);
+    //Key as string
+    const char* keyString = luaL_checkstring(L, 4);
 
-	// Number of bins.
-	const int numBins = lua_tointeger(L, 5);
+    // Number of bins.
+    const int numBins = lua_tointeger(L, 5);
 
-	//Bins
-	as_record rec = add_bins_to_rec(L, 6, numBins);
+    //Bins
+    as_record rec = add_bins_to_rec(L, 6, numBins);
 
-	// Create key
-	as_key key;
-	as_error err;
-	as_key_init(&key, nameSpace, set, keyString);
+    // Create key
+    as_key key;
+    as_error err;
+    as_key_init(&key, nameSpace, set, keyString);
 
-	// Write record
-	aerospike_key_put(as, &err, NULL, &key, &rec);
-	as_key_destroy(&key);
-	// Return status
-	lua_pushnumber(L, err.code);
-	lua_pushstring(L, err.message);
-	return 2;
+    // Write record
+    aerospike_key_put(as, &err, NULL, &key, &rec);
+    as_key_destroy(&key);
+    // Return status
+    lua_pushnumber(L, err.code);
+    lua_pushstring(L, err.message);
+    return 2;
 
 }
 
 
 static int increment(lua_State *L){
-	as_error err;
-	aerospike* as = lua_touserdata(L, 1);
-	const char* nameSpace = luaL_checkstring(L, 2);
-	const char* set = luaL_checkstring(L, 3);
-	const char* keyString = luaL_checkstring(L, 4);
-	const int numBins = lua_tointeger(L, 5);
+    as_error err;
+    aerospike* as = lua_touserdata(L, 1);
+    const char* nameSpace = luaL_checkstring(L, 2);
+    const char* set = luaL_checkstring(L, 3);
+    const char* keyString = luaL_checkstring(L, 4);
+    const int numBins = lua_tointeger(L, 5);
 
-	as_operations ops = add_bins_to_increment(L, 6, numBins);
+    as_operations ops = add_bins_to_increment(L, 6, numBins);
 
-	as_key key;
-	as_key_init(&key, nameSpace, set, keyString);
-	// Apply the operations. Since the record does not exist, it will be created
-	// and the bins initialized with the ops' integer values.
-	aerospike_key_operate(as, &err, NULL, &key, &ops, NULL);
+    as_key key;
+    as_key_init(&key, nameSpace, set, keyString);
+    // Apply the operations. Since the record does not exist, it will be created
+    // and the bins initialized with the ops' integer values.
+    aerospike_key_operate(as, &err, NULL, &key, &ops, NULL);
 
-	as_operations_destroy(&ops);
-	as_key_destroy(&key);
+    as_operations_destroy(&ops);
+    as_key_destroy(&key);
 
-	lua_pushnumber(L, err.code);
-	lua_pushstring(L, err.message);
-	return 2;
+    lua_pushnumber(L, err.code);
+    lua_pushstring(L, err.message);
+    return 2;
 }
 
 static const struct luaL_Reg as_client [] = {
-		{"connect", connect},
-		{"disconnect", disconnect},
-		{"get", get},
-		{"put", put},
-		{"increment", increment},
-		{NULL, NULL}
+        {"connect", connect},
+        {"disconnect", disconnect},
+        {"get", get},
+        {"put", put},
+        {"increment", increment},
+        {NULL, NULL}
 };
 
 extern int luaopen_as_lua(lua_State *L){
-	luaL_register(L, "as_lua", as_client);
-	return 0;
+    luaL_register(L, "as_lua", as_client);
+    return 0;
 }
 
