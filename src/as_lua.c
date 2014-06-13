@@ -143,7 +143,11 @@ static int pconnect(lua_State *L) {
 
         aerospike_connect(&asPersistent, &err);
 
-        isPConnected = true;
+        if (err.code == AEROSPIKE_OK) {
+            isPConnected = true;
+        } else {
+            isPConnected = false;
+        }
     }
 
     lua_pushnumber(L, err.code);
